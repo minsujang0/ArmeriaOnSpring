@@ -1,10 +1,10 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
+    kotlin("jvm") version "2.1.10"
+    kotlin("plugin.spring") version "2.1.10"
     id("org.springframework.boot") version "3.5.0"
     id("io.spring.dependency-management") version "1.1.7"
-    kotlin("plugin.jpa") version "1.9.25"
-    kotlin("kapt") version "1.9.25"
+    kotlin("plugin.jpa") version "2.1.10"
+    kotlin("kapt") version "2.1.10"
     id("com.google.protobuf") version "0.9.2"
 }
 
@@ -36,7 +36,7 @@ dependencies {
     kapt(group = "com.querydsl", name = "querydsl-apt", classifier = "jakarta")
 
     // protobuf
-    implementation("io.grpc:grpc-kotlin-stub:1.4.2")
+    implementation("io.grpc:grpc-kotlin-stub:1.4.1")
     implementation("io.grpc:grpc-protobuf:1.70.0")
     implementation("com.google.protobuf:protobuf-kotlin:3.25.5")
     implementation("com.google.protobuf:protobuf-java-util:3.25.5")
