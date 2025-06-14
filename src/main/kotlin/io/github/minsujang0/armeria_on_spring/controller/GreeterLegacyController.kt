@@ -9,6 +9,11 @@ import org.springframework.web.bind.annotation.RestController
 data class SayHelloLegacyRequest(val name: String)
 data class SayHelloLegacyResponse(val message: String)
 
+/**
+ * A classic Spring MVC controller that handles traditional RESTful API requests.
+ * This controller demonstrates how existing Spring components can coexist with Armeria services.
+ * It uses a standard dependency injection mechanism to wire up with [GreeterLegacyService].
+ */
 @RestController
 @RequestMapping("/v1/greeter")
 class GreeterLegacyController(

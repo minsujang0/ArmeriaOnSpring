@@ -8,6 +8,13 @@ import io.github.minsujang0.greeter.v1.sayHelloNewResponse
 import io.grpc.stub.StreamObserver
 import org.springframework.stereotype.Component
 
+/**
+ * A gRPC service that provides a standard, blocking implementation.
+ *
+ * This service handles gRPC requests in a synchronous manner, making it straightforward
+ * for developers familiar with traditional blocking I/O models. It's registered as a Spring
+ * component and can inject other beans like [GreeterService].
+ */
 @Component
 class GreeterNewGrpcService(private val greeterService: GreeterService) :
     GreeterNewServiceGrpc.GreeterNewServiceImplBase() {
