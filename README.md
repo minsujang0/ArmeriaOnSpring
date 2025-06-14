@@ -1,91 +1,204 @@
-# ArmeriaOnSpring: Spring Boot에서 Armeria gRPC로의 점진적 전환 샘플 프로젝트
+# ArmeriaOnSpring: Gradual gRPC Integration with Spring Boot
 
-본 프로젝트는 기존의 일반적인 Spring Boot 웹 애플리케이션을 어떻게 Armeria 기반의 고성능 gRPC 서버로 점진적으로 전환하거나 통합할 수 있는지에 대한 청사진을 제시하는 포트폴리오 샘플입니다.
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.10-7F52FF?style=for-the-badge&logo=kotlin)](https://kotlinlang.org)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.0-6DB33F?style=for-the-badge&logo=spring-boot)](https://spring.io/projects/spring-boot)
+[![gRPC](https://img.shields.io/badge/gRPC-1.70.0-GREEN?style=for-the-badge&logo=grpc)](https://grpc.io)
+[![Armeria](https://img.shields.io/badge/Armeria-1.32.5-0D1B2A?style=for-the-badge&logo=armeria&logoColor=white)](https://armeria.dev)
+[![Gradle](https://img.shields.io/badge/Gradle-8.5-02303A?style=for-the-badge&logo=gradle)](https://gradle.org)
 
-## 🚀 프로젝트 목표
+A sample project demonstrating a seamless, gradual integration of a high-performance Armeria gRPC server into an existing Spring Boot application.
 
-많은 기업들이 이미 수많은 Spring Boot 기반의 애플리케이션을 운영하고 있습니다. 마이크로서비스 아키텍처(MSA)로 전환하거나 서비스 간 통신 성능을 극대화하기 위해 gRPC 도입을 고려할 때, "기존의 잘 동작하는 코드를 어떻게 gRPC와 자연스럽게 융합시킬 수 있을까?"라는 큰 과제에 직면하게 됩니다.
 
-이 프로젝트는 다음과 같은 해법을 제시하며, **자연스러운 gRPC 서버 개발 플로우**를 구축하는 데 주안점을 둡니다.
 
-1.  **점진적 도입**: 기존 Spring Boot의 `ApplicationContext`와 Bean들을 그대로 활용하면서 Armeria 서버를 통합하여, 전체 애플리케이션을 한 번에 재작성할 필요 없이 새로운 gRPC 서비스를 추가하거나 기존 REST API를 gRPC로 전환할 수 있습니다.
-2.  **개발 경험의 통일성**: Armeria를 처음 접하는 개발자도 기존 Spring 개발 방식처럼 편안하게 gRPC 서비스를 개발할 수 있도록 표준화된 유틸리티와 워크플로우를 제공합니다.
-3.  **MSA를 위한 강력한 기반**: MSA 환경에서 필수적인 서비스 간 오류 전파와 추적을 위한 강력하고 체계적인 예외 처리 매커니즘을 내장합니다.
+This project serves as a blueprint for evolving a monolithic Spring Boot application towards a microservices architecture, showcasing a robust, unified exception handling model for modern distributed systems.
+
+## ✨ Key Features
+
+-   **Hybrid Server Architecture**: Runs both Spring Web MVC (on Tomcat) and an Armeria gRPC server in a single JVM, allowing for gradual migration.
+-   **Unified Dependency Injection**: All components, whether REST controllers or gRPC services, are managed by Spring's IoC container, enabling seamless reuse of business logic.
+-   **Advanced Exception Handling**: Implements a sophisticated and standardized error propagation mechanism, crucial for resilient microservices.
+-   **Multiple gRPC Flavors**: Demonstrates blocking, non-blocking (coroutine-based), and gRPC-to-REST transcoding services.
 
 ---
 
-## 🏛️ 핵심 아키텍처 및 특징
+## 🏛️ Architecture Overview
 
--   **하이브리드 서버**: 하나의 프로세스에서 Spring Boot의 내장 Tomcat(또는 Netty)과 Armeria 서버가 함께 실행됩니다. 기존 REST API는 Spring Webflux/MVC를 통해, 새로운 gRPC 서비스는 Armeria를 통해 제공됩니다.
--   **Spring Bean 재사용**: Armeria의 gRPC 서비스(`BindableService`) 구현체는 Spring의 `@Component`로 등록된 기존 서비스(`@Service`)나 레포지토리(`@Repository`) Bean들을 `@Autowired`하여 그대로 사용할 수 있습니다.
--   **표준화된 개발 워크플로우**: 아래에 설명된 커스텀 유틸리티 스위트를 통해 gRPC 서비스 개발, 예외 처리, 클라이언트 생성을 표준화하여 생산성을 높입니다.
+This project operates a hybrid server model where Armeria and Spring's embedded Tomcat coexist. They share a single Spring `ApplicationContext`, allowing Armeria's gRPC services and Spring's MVC controllers to be injected with the same service and repository beans.
 
----
+```mermaid
+graph TD
+    subgraph "Application Process (Single JVM)"
+        direction LR
 
-## ✨ 표준화된 gRPC 개발 워크플로우 유틸리티
+        subgraph "Armeria Server"
+            gRPC_Compat["GreeterCompatService<br>(gRPC + REST)"]
+            gRPC_New["GreeterNewService<br>(Blocking)"]
+            gRPC_New2["GreeterNew2Service<br>(Non-Blocking)"]
+        end
 
-본 프로젝트는 안정적이고 효율적인 gRPC 서비스 개발을 위해 직접 구현한 유틸리티 스위트를 포함합니다.
+        subgraph "Spring Boot (Embedded Tomcat)"
+            REST_Legacy["GreeterLegacyController<br>(REST API)"]
+        end
 
-### 1. 컨트롤러/서비스 로직 감싸기 (`ControllerUtil.kt`)
+        subgraph "Shared Components (Spring IoC)"
+            BusinessService["GreeterService (@Service)"]
+            Repo["Repositories (@Repository)"]
+            LevelClient["LevelService Client"]
+        end
+    end
 
-모든 gRPC 서비스 메소드는 예외를 자동으로 처리하기 위해 `withEventLoopCatching` 또는 `returnCatching`으로 감싸야 합니다.
+    subgraph "External Service"
+        LevelService["LevelService (gRPC)"]
+    end
 
--   **Suspending 함수 (Coroutine 기반):**
-    `withEventLoopCatching`을 사용하여 Armeria의 이벤트 루프에서 비동기 코드를 안전하게 실행합니다.
+    REST_Legacy --> BusinessService
+    gRPC_Compat --> BusinessService
+    gRPC_New --> BusinessService
+    gRPC_New2 --> BusinessService
 
-    ```kotlin
-    // ExampleService.kt
-    override suspend fun getUser(request: GetUserRequest): GetUserResponse {
-        return withEventLoopCatching { // Coroutine-based
-            val user = userService.find(request.id) // userService is an injected Spring Bean
-            user.toResponse()
-        }
-    }
-    ```
+    BusinessService --> Repo
+    BusinessService --> LevelClient
 
-### 2. 예외 포착 및 변환 (`GrpcExceptionCatch.kt`)
-
-`...Catching` 헬퍼 함수들은 내부적으로 `blockingCatch` 또는 `suspendingCatch`를 호출합니다. 이 함수들은 `try-catch` 블록으로 비즈니스 로직을 감싸고, 어떤 `Throwable`이든 포착하여 `onCatch` 함수로 전달합니다. `onCatch` 함수는 예외의 발생 원인(Context)에 따라 적절한 `GrpcException`으로 변환 후 다시 던집니다.
-
-#### `GrpcException`의 종류와 용도
-
--   **`GrpcServerException` (자동 생성):** 컨트롤러 메소드 내에서 직접 발생한 예외(e.g., `IllegalStateException`)를 감쌀 때 사용됩니다.
--   **`InternalException` (수동 생성):** 서버 내부의 다른 레이어(e.g., Service)에서 발생한 예외를 개발자가 **의도적으로** 감싸서 상위 레이어로 전달할 때 사용합니다.
--   **`GrpcClientCallException` (자동 생성):** 다운스트림 gRPC 서비스 호출 시 발생한 `StatusRuntimeException`을 감쌀 때 사용됩니다.
--   **`GrpcErrorException` (수동 생성):** 특정 오류를 즉시 반환하고 싶을 때 개발자가 직접 사용할 수 있습니다.
-
-### 3. 서버 예외 처리 및 전파 (`GrpcExceptionHandler.kt`)
-
-`onCatch`에서 던져진 `GrpcException`은 Armeria 서버에 의해 포착되어, `googleRpcStatusExceptionHandler`에 의해 gRPC 응답의 트레일러(metadata)에 에러 정보가 기록됩니다.
-
-**[중요] 서버 설정:**
-이 과정을 단순화하기 위해 `GrpcService` 팩토리 함수를 제공합니다. 이 함수는 예외 핸들러, Protobuf 리플렉션 등 유용한 옵션들을 기본적으로 활성화합니다.
-
-```kotlin
-// ArmeriaServerConfiguration.kt
-serverBuilder.service(
-    GrpcService(
-        myGrpcService, // This can be a Spring Bean
-        useBlocking = true,
-        useHttpJsonTranscoding = true,
-        useUnframedRequests = true
-    )
-)
+    LevelClient -- "gRPC Call<br>(Handles GrpcClientCallException)" --> LevelService
 ```
 
-### 4. 연쇄 호출에서 전파된 오류 처리
+---
 
-`errorMapCatch` 같은 헬퍼를 사용해 다운스트림 서비스에서 전파된 오류를 현재 서비스의 컨텍스트에 맞는 오류로 손쉽게 변환할 수 있습니다. 이 매커니즘을 통해, 연쇄 호출의 가장 끝에서 발생한 구체적인 오류가 모든 호출 스택에 걸쳐 컨텍스트를 잃지 않고 명확하게 전파됩니다.
+## 🔧 Standardized Exception Handling Workflow
+
+The core of this project is its exception handling utility suite, designed for clear and consistent error propagation in an MSA environment. The `GreeterService` demonstrates five practical scenarios.
+
+All custom exceptions are caught and translated into standard gRPC statuses and metadata by Armeria's `googleRpcStatusExceptionHandler`.
+
+<details>
+<summary><strong>Case 1: Immediately Returning an Intentional Error (`GrpcErrorException`)</strong></summary>
+
+The most direct way to return a predefined gRPC error. The logic immediately stops and returns a specific error to the client.
+
+```kotlin
+// GreeterService.kt
+
+// If the user is not found, immediately throw a GrpcErrorException.
+val user = userDslRepository.findByName(name)
+    ?: throw GrpcErrorException(GreeterNewError.GREETER_NEW_ERROR_USER_NOT_FOUND)
+```
+
+</details>
+
+<details>
+<summary><strong>Case 2: Converting a Generic Exception to a Specific gRPC Error (`simpleCatch`)</strong></summary>
+
+Catches any `Throwable` within a logic block and converts it to a specified gRPC error. This is useful for treating all errors in a particular context identically.
+
+```kotlin
+// GreeterService.kt
+
+// Any exception inside this block is converted to the USER_INVALID error.
+simpleCatch(
+    GreeterNewError.GREETER_NEW_ERROR_USER_INVALID
+) {
+    userInternalService.checkUserInvalid(user)
+}
+```
+</details>
+
+<details>
+<summary><strong>Case 3: Mapping Specific Exception Types to gRPC Errors (`throwableMapCatch`)</strong></summary>
+
+Maps different gRPC errors based on the `Throwable` type. For example, `IllegalStateException` can be mapped to `USER_INVALID`, while others fall back to a default error.
+
+```kotlin
+// GreeterService.kt
+
+// Maps IllegalStateException to USER_INVALID, others to UNSPECIFIED.
+throwableMapCatch(
+    mapOf(
+        IllegalStateException::class.java to GreeterNewError.GREETER_NEW_ERROR_USER_INVALID
+    ),
+    GreeterNewError.GREETER_NEW_ERROR_UNSPECIFIED
+) {
+    userInternalService.checkUserState(user)
+}
+```
+</details>
+
+<details>
+<summary><strong>Case 4: Translating Errors from an Internal Service (`errorMapCatch` + `InternalException`)</strong></summary>
+
+Translates an `InternalException` from another service layer into a gRPC error appropriate for the current service's context. This separates error domains between services.
+
+```kotlin
+// GreeterService.kt
+
+// Translates a BANNED_USER error from userInternalService into the Greeter service's USER_BANNED gRPC error.
+val userBanned = errorMapCatch(
+    mapOf(UserInternalService.Error.BANNED_USER to GreeterNewError.GREETER_NEW_ERROR_USER_BANNED),
+    GreeterNewError.GREETER_NEW_ERROR_UNSPECIFIED
+) {
+    userInternalService.checkUserBanned(user)
+}
+```
+</details>
+
+<details>
+<summary><strong>Case 5: Translating Errors from a Downstream gRPC Service (`errorMapCatch` + `GrpcClientCallException`)</strong></summary>
+
+Converts a `GrpcClientCallException` from a downstream gRPC call into an error that fits the current service's context. This is a key pattern for gracefully handling service dependency failures in an MSA.
+
+```kotlin
+// GreeterService.kt
+
+// Translates a LEVEL_SYSTEM_UNAVAILABLE error from LevelService into the Greeter service's SERVICE_UNAVAILABLE error.
+val level = errorMapCatch(
+    mapOf(LevelServiceError.LEVEL_SERVICE_ERROR_LEVEL_SYSTEM_UNAVAILABLE to GreeterNewError.GREETER_NEW_ERROR_SERVICE_UNAVAILABLE),
+    GreeterNewError.GREETER_NEW_ERROR_UNSPECIFIED
+) {
+    levelGrpcClient.getLevel(getLevelRequest { this.userId = user.id!!.toString() })
+}.level
+```
+</details>
 
 ---
 
-## 🛠️ 기타 유틸리티
+## 📂 Project Structure
 
-### Protobuf <-> Kotlin/Java 타입 변환 (`ProtobufExtensions.kt`)
+```
+.
+├── gradle/
+├── src
+│   ├── main
+│   │   ├── kotlin/io/github/minsujang0/armeria_on_spring
+│   │   │   ├── controller/    # Legacy Spring MVC Controllers
+│   │   │   ├── grpc/          # gRPC Service Implementations
+│   │   │   ├── service/       # Shared Business Logic Services (@Service)
+│   │   │   ├── repository/    # Data Access Layer (@Repository)
+│   │   │   ├── entity/        # JPA Entities
+│   │   │   ├── config/        # Armeria & Spring Configurations
+│   │   │   └── util/          # Core utilities (Exception Handling, etc.)
+│   │   └── proto/             # .proto file definitions
+│   └── test/
+├── build.gradle.kts
+└── README.md
+```
 
-`com.google.protobuf.Value`, `Struct`, `Timestamp` 등과 표준 타입 간의 변환을 쉽게 해주는 확장 함수들을 제공합니다.
+---
 
-### HTTP 헤더 처리 (`HttpHeaderUtil.kt`, `GrpcClientUtil.kt`)
+## 🚀 How to Run
 
--   `userIdFromHeader`: `BindableService` 컨텍스트 내에서 `X-User-Id` 헤더를 쉽게 추출합니다.
--   `ProtoClient`: gRPC 클라이언트 생성 시, 현재 요청의 `X-User-Id` 헤더를 다음 gRPC 요청에 자동으로 전파(propagate)하는 데코레이터를 포함합니다. 
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/minsujang0/ArmeriaOnSpring.git
+    cd ArmeriaOnSpring
+    ```
+
+2.  **Build the project:**
+    This command will also generate gRPC code from the `.proto` files.
+    ```bash
+    ./gradlew build
+    ```
+
+3.  **Run the application:**
+    ```bash
+    ./gradlew bootRun
+    ```
+The server will start on port `8080`. You can now send requests to the REST endpoints or gRPC services. 
