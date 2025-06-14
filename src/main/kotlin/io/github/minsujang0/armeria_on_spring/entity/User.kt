@@ -8,6 +8,8 @@ class User(
     val name: String,
     val nickname: String,
 ) {
+    val isBanned: Boolean = false
+
     @Id
     var id: Long? = null
 }
