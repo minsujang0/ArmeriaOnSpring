@@ -5,6 +5,9 @@ import com.linecorp.armeria.server.logging.AccessLogWriter
 import com.linecorp.armeria.server.logging.LoggingService
 import com.linecorp.armeria.server.tomcat.TomcatService
 import com.linecorp.armeria.spring.ArmeriaServerConfigurator
+import io.github.minsujang0.armeria_on_spring.grpc.GreeterCompatGrpcService
+import io.github.minsujang0.armeria_on_spring.grpc.GreeterNew2GrpcService
+import io.github.minsujang0.armeria_on_spring.grpc.GreeterNewGrpcService
 import io.github.minsujang0.armeria_on_spring.util.armeria.grpc.GrpcService
 import org.apache.catalina.connector.Connector
 import org.apache.catalina.startup.Tomcat
@@ -32,13 +35,30 @@ class ArmeriaServerConfiguration {
     @Bean
     fun armeriaServerConfigurator(
         tomcatService: TomcatService,
+        greeterNewGrpcService: GreeterNewGrpcService,
+        greeterCompatGrpcService: GreeterCompatGrpcService,
+        greeterNew2GrpcService: GreeterNew2GrpcService,
     ): ArmeriaServerConfigurator {
         return ArmeriaServerConfigurator { sb: ServerBuilder ->
             sb.serviceUnder("/", tomcatService)
             sb.decorator(LoggingService.newDecorator())
             sb.accessLogWriter(AccessLogWriter.combined(), false)
             sb.service(
-                GrpcService(useBlocking = true, useHttpJsonTranscoding = false, useUnframedRequests = false)
+                GrpcService(
+                    greeterNewGrpcService,
+                    greeterNew2GrpcService,
+                    useBlocking = true,
+                    useHttpJsonTranscoding = false,
+                    useUnframedRequests = false,
+                )
+            )
+            sb.service(
+                GrpcService(
+                    greeterCompatGrpcService,
+                    useBlocking = true,
+                    useHttpJsonTranscoding = true,
+                    useUnframedRequests = false,
+                )
             )
             sb.verboseResponses(true)
         }
