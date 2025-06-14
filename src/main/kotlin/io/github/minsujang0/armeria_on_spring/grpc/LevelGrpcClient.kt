@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class LevelGrpcClient {
     @Bean
-    fun levelGrpcClient(): LevelServiceGrpc.LevelServiceBlockingV2Stub {
+    fun levelGrpcStub(): LevelServiceGrpc.LevelServiceBlockingV2Stub {
         return ProtoClient<LevelServiceGrpc.LevelServiceBlockingV2Stub>("http://level-service:8080")
     }
 }
