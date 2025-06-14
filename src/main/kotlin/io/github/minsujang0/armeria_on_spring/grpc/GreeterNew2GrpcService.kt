@@ -1,6 +1,7 @@
 package io.github.minsujang0.armeria_on_spring.grpc
 
 import io.github.minsujang0.armeria_on_spring.service.GreeterService
+import io.github.minsujang0.armeria_on_spring.util.armeria.web.userIdFromHeader
 import io.github.minsujang0.greeter.v1.GreeterNew2ServiceGrpcKt
 import io.github.minsujang0.greeter.v1.SayHelloNew2Request
 import io.github.minsujang0.greeter.v1.SayHelloNew2Response
@@ -22,7 +23,8 @@ class GreeterNew2GrpcService(
         // Need R2DBC or other reactive database access to fetch data in transaction
 
         return sayHelloNew2Response {
-            this.message = "Hello, ${request.name}!"
+            this.message =
+                "Hello, ${request.name}! You look like $userIdFromHeader." // get userIdFromHeader from Armeria's context
         }
     }
 } 
