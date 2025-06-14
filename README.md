@@ -23,21 +23,26 @@ This project serves as a blueprint for evolving a monolithic Spring Boot applica
 
 ## 🏛️ Architecture Overview
 
-This project operates a hybrid server model where Armeria and Spring's embedded Tomcat coexist. They share a single Spring `ApplicationContext`, allowing Armeria's gRPC services and Spring's MVC controllers to be injected with the same service and repository beans.
+This project operates a hybrid server model where Armeria and Spring's embedded Tomcat coexist. Armeria acts as the main server, handling all incoming traffic. It serves gRPC requests natively and delegates all other requests (like those for Spring MVC controllers) to the embedded Tomcat instance via `TomcatService`.
+
+They share a single Spring `ApplicationContext`, allowing Armeria's gRPC services and Spring's MVC controllers to be injected with the same service and repository beans.
 
 ```mermaid
 graph TD
-    subgraph "Application Process (Single JVM)"
-        direction LR
+    subgraph "Client"
+        IncomingRequest["Incoming Requests<br>(gRPC / HTTP)"]
+    end
 
-        subgraph "Armeria Server"
-            gRPC_Compat["GreeterCompatService<br>(gRPC + REST)"]
-            gRPC_New["GreeterNewService<br>(Blocking)"]
-            gRPC_New2["GreeterNew2Service<br>(Non-Blocking)"]
+    subgraph "Application Process (Single JVM)"
+        ArmeriaServer["Armeria Server<br>(Acts as main entry point)"]
+
+        subgraph "Armeria Native Services"
+            gRPC_Services("gRPC Services<br>GreeterNew, New2, Compat")
         end
 
-        subgraph "Spring Boot (Embedded Tomcat)"
-            REST_Legacy["GreeterLegacyController<br>(REST API)"]
+        subgraph "Delegated to Spring Boot"
+            TomcatService["TomcatService<br>(Wraps Embedded Tomcat)"]
+            REST_Legacy["GreeterLegacyController"]
         end
 
         subgraph "Shared Components (Spring IoC)"
@@ -47,19 +52,24 @@ graph TD
         end
     end
 
-    subgraph "External Service"
-        LevelService["LevelService (gRPC)"]
+    subgraph "Downstream"
+        ExternalService["External LevelService (gRPC)"]
     end
 
+    IncomingRequest --> ArmeriaServer
+
+    ArmeriaServer -- "gRPC paths" --> gRPC_Services
+    ArmeriaServer -- "HTTP paths" --> TomcatService
+
+    TomcatService --> REST_Legacy
+
     REST_Legacy --> BusinessService
-    gRPC_Compat --> BusinessService
-    gRPC_New --> BusinessService
-    gRPC_New2 --> BusinessService
+    gRPC_Services --> BusinessService
 
     BusinessService --> Repo
     BusinessService --> LevelClient
 
-    LevelClient -- "gRPC Call<br>(Handles GrpcClientCallException)" --> LevelService
+    LevelClient -- "gRPC Call" --> ExternalService
 ```
 
 ---
