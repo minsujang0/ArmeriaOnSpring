@@ -68,3 +68,43 @@ allOpen {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+// for armeria api tester generation
+val armeriaDscPath = "${layout.buildDirectory.get().asFile}/resources/main/META-INF/armeria/grpc/service-name.dsc"
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.5"
+    }
+    plugins {
+        create("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.70.0"
+        }
+        create("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar"
+        }
+    }
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                create("grpc")
+                create("grpckt")
+            }
+            it.builtins {
+                create("kotlin")
+            }
+            it.generateDescriptorSet = true
+            it.descriptorSetOptions.includeSourceInfo = true
+            it.descriptorSetOptions.includeImports = true
+            it.descriptorSetOptions.path = armeriaDscPath
+        }
+    }
+}
+
+tasks.resolveMainClassName {
+    dependsOn("generateTestProto")
+}
+
+tasks.jar {
+    dependsOn("generateTestProto")
+}
