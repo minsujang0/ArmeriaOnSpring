@@ -1,8 +1,8 @@
-package io.github.minsujang0.garmeria.util.armeria.web
+package io.github.minsujang0.armeria_on_spring.util.armeria.web
 
 import com.linecorp.armeria.server.ServiceRequestContext
-import io.github.minsujang0.garmeria.util.armeria.grpc.exception.blockingCatch
-import io.github.minsujang0.garmeria.util.armeria.grpc.exception.suspendingCatch
+import io.github.minsujang0.armeria_on_spring.util.armeria.grpc.exception.blockingCatch
+import io.github.minsujang0.armeria_on_spring.util.armeria.grpc.exception.suspendingCatch
 import io.grpc.stub.StreamObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher

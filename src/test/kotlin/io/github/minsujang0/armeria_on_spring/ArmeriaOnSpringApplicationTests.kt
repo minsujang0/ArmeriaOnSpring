@@ -1,10 +1,10 @@
-package io.github.minsujang0.garmeria
+package io.github.minsujang0.armeria_on_spring
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
-class GArmeriaApplicationTests {
+class ArmeriaOnSpringApplicationTests {
 
     @Test
     fun contextLoads() {

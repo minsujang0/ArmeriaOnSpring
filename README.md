@@ -1,4 +1,4 @@
-# gArmeria: Spring Boot에서 Armeria gRPC로의 점진적 전환 샘플 프로젝트
+# ArmeriaOnSpring: Spring Boot에서 Armeria gRPC로의 점진적 전환 샘플 프로젝트
 
 본 프로젝트는 기존의 일반적인 Spring Boot 웹 애플리케이션을 어떻게 Armeria 기반의 고성능 gRPC 서버로 점진적으로 전환하거나 통합할 수 있는지에 대한 청사진을 제시하는 포트폴리오 샘플입니다.
 

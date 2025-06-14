@@ -1,4 +1,4 @@
-package io.github.minsujang0.garmeria.util.protobuf
+package io.github.minsujang0.armeria_on_spring.util.protobuf
 
 import com.google.protobuf.ListValue
 import com.google.protobuf.Struct

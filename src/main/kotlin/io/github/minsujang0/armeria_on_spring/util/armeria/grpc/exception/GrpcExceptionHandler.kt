@@ -1,4 +1,4 @@
-package io.github.minsujang0.garmeria.util.armeria.grpc.exception
+package io.github.minsujang0.armeria_on_spring.util.armeria.grpc.exception
 
 import com.google.rpc.Status
 import com.linecorp.armeria.common.RequestContext

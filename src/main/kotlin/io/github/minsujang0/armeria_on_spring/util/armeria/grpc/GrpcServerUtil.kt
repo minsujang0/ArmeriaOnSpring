@@ -1,7 +1,7 @@
-package io.github.minsujang0.garmeria.util.armeria.grpc
+package io.github.minsujang0.armeria_on_spring.util.armeria.grpc
 
 import com.linecorp.armeria.server.grpc.GrpcService
-import io.github.minsujang0.garmeria.util.armeria.grpc.exception.googleRpcStatusExceptionHandler
+import io.github.minsujang0.armeria_on_spring.util.armeria.grpc.exception.googleRpcStatusExceptionHandler
 import io.grpc.BindableService
 import io.grpc.protobuf.services.ProtoReflectionService
 

@@ -1,4 +1,4 @@
-package io.github.minsujang0.garmeria.util.armeria.web
+package io.github.minsujang0.armeria_on_spring.util.armeria.web
 
 import com.linecorp.armeria.server.ServiceRequestContext
 import io.grpc.BindableService
