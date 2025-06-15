@@ -86,9 +86,9 @@ suspend fun <T> errorMapCatchSus(
 
 inline fun onCatch(crossinline errorEmitter: ((Throwable) -> Enum<*>?), throwable: Throwable) {
     when (throwable) {
-        // 내부에서 propagation 용도로 InternalException 사용
-        // InternalException에 Protocol에서 정의한 Enum이 들어가면 GrpcServerException으로 변환해 체인을 마무리.
-        // 그외의 경우에는 계속 InternalException을 전파해서 상위에서 처리되도록 보존.
+        // Use InternalException for propagation purposes
+        // If the InternalException contains an Enum defined in the Protocol, convert it to a GrpcServerException to finish the chain.
+        // Otherwise, continue propagating the InternalException so that it is handled by the upper layer.
         is InternalException -> {
             val error = errorEmitter(throwable)
             when (error) {
@@ -103,7 +103,7 @@ inline fun onCatch(crossinline errorEmitter: ((Throwable) -> Enum<*>?), throwabl
         }
 
         // already gRPC exception, just rethrow
-        // FIXME: 현재 구조에선 블록내에서 GrpcException가 발생할 경우 상위 errorEmitter는 무시 되는데 이를 추후 수정해야 할 듯
+        // FIXME: In the current structure, if a GrpcException occurs within a block, the upper errorEmitter is ignored, so it should be modified later
         is GrpcException -> throw throwable
 
         // exception coming from gRPC client
