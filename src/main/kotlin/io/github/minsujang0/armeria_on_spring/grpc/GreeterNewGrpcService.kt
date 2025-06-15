@@ -1,6 +1,7 @@
 package io.github.minsujang0.armeria_on_spring.grpc
 
 import io.github.minsujang0.armeria_on_spring.service.GreeterService
+import io.github.minsujang0.armeria_on_spring.util.armeria.web.returnCatching
 import io.github.minsujang0.greeter.v1.GreeterNewServiceGrpc
 import io.github.minsujang0.greeter.v1.SayHelloNewRequest
 import io.github.minsujang0.greeter.v1.SayHelloNewResponse
@@ -22,7 +23,7 @@ class GreeterNewGrpcService(private val greeterService: GreeterService) :
         request: SayHelloNewRequest,
         responseObserver: StreamObserver<SayHelloNewResponse>,
     ) {
-        responseObserver.runCatching {
+        responseObserver.returnCatching {
             sayHelloNewResponse {
                 this.message = greeterService.sayHello(request.name)
             }

@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    active: local
+
+server:
+  port: -1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  server:
+    port: -1
+
+armeria:
+  ports:
+    - port: 8080
+      protocols:
+        - HTTP
+  internal-services:
+    include: docs, health, metrics, actuator
+    port: 9090

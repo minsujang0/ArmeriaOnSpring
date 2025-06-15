@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:armeria;MODE=MYSQL;INIT=CREATE SCHEMA IF NOT EXISTS armeria;
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false

@@ -10,26 +10,17 @@ import io.github.minsujang0.armeria_on_spring.grpc.GreeterNew2GrpcService
 import io.github.minsujang0.armeria_on_spring.grpc.GreeterNewGrpcService
 import io.github.minsujang0.armeria_on_spring.util.armeria.grpc.GrpcService
 import org.apache.catalina.connector.Connector
-import org.apache.catalina.startup.Tomcat
 import org.springframework.boot.web.embedded.tomcat.TomcatWebServer
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 
 
 @Configuration
 class ArmeriaServerConfiguration {
     @Bean
-    @Profile("!local")
     fun tomcatService(applicationContext: ServletWebServerApplicationContext): TomcatService {
         return TomcatService.of(getConnector(applicationContext))
-    }
-
-    @Bean
-    @Profile("local")
-    fun localTomcatService(): TomcatService {
-        return TomcatService.of(Tomcat())
     }
 
     @Bean
